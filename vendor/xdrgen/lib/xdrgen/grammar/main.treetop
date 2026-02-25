@@ -1,0 +1,30 @@
+grammar XdrMainGrammar
+  include XdrBaseGrammar
+  include XdrDeclarationGrammar
+  include XdrCommentsGrammar
+  include XdrEnumGrammar
+  include XdrTypedefGrammar
+  include XdrStructGrammar
+  include XdrUnionGrammar
+  include XdrConstGrammar
+  include XdrNamespaceGrammar
+
+  rule top
+    children_n:definition*
+    <Xdrgen::AST::Top>
+  end
+
+  rule definition
+    (
+      typedef_def /
+      enum_def /
+      struct_def /
+      union_def /
+      const_def / 
+      namespace_def /
+      ampersand_line /
+      space
+    )
+  end
+
+end

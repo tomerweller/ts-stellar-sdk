@@ -1,0 +1,359 @@
+# ts-xdr
+
+A modern, TypeScript-first [XDR (RFC 4506)](https://www.rfc-editor.org/rfc/rfc4506) codec library. Zero runtime dependencies, fully type-safe, with support for both binary and Base64 formats.
+
+Built to replace the aging `@stellar/js-xdr` as the foundation for the next-generation TypeScript Stellar SDK. Inspired by [`rs-stellar-xdr`](https://github.com/stellar/rs-stellar-xdr) (Rust) but tailored to TypeScript idioms.
+
+## Features
+
+- **RFC 4506 compliant** — full XDR specification support
+- **Zero runtime dependencies** — only TypeScript and Vitest as dev dependencies
+- **Type-safe** — discriminated unions, string-literal enums, readonly interfaces
+- **Native BigInt** — 64-bit integers use JavaScript's native `bigint`
+- **Cross-platform** — works in Node.js (>=18) and browsers
+- **Code-generated types** — generated from `.x` schema files via `xdrgen`
+- **Safety limits** — depth and byte-count tracking to prevent denial-of-service
+
+## Installation
+
+```bash
+npm install ts-xdr
+```
+
+Requires Node.js >= 18.
+
+## Quick Start
+
+```typescript
+import {
+  int32, uint32, bool, xdrString,
+  fixedOpaque, varArray, option,
+  xdrStruct, xdrEnum, taggedUnion,
+} from 'ts-xdr';
+
+// Define an enum
+const Color = xdrEnum({ Red: 0, Green: 1, Blue: 2 });
+
+Color.Red;   // 0
+Color.Green; // 1
+
+// Encode / decode
+const bytes = Color.toXdr('Red');
+const color = Color.fromXdr(bytes); // 'Red'
+
+// Define a struct
+interface Point {
+  readonly x: number;
+  readonly y: number;
+}
+
+const Point = xdrStruct<Point>([
+  ['x', int32],
+  ['y', int32],
+]);
+
+const encoded = Point.toXdr({ x: 10, y: 20 });
+const decoded = Point.fromXdr(encoded); // { x: 10, y: 20 }
+
+// Base64 support
+const base64 = Point.toBase64({ x: 10, y: 20 });
+const fromB64 = Point.fromBase64(base64);
+```
+
+## Type Mapping
+
+| XDR Type | TypeScript Type | Codec |
+|---|---|---|
+| `int` | `number` | `int32` |
+| `unsigned int` | `number` | `uint32` |
+| `hyper` | `bigint` | `int64` |
+| `unsigned hyper` | `bigint` | `uint64` |
+| `float` | `number` | `float32` |
+| `double` | `number` | `float64` |
+| `bool` | `boolean` | `bool` |
+| `void` | `void` | `xdrVoid` |
+| `opaque[N]` | `Uint8Array` | `fixedOpaque(N)` |
+| `opaque<N>` | `Uint8Array` | `varOpaque(N)` |
+| `string<N>` | `string` | `xdrString(N)` |
+| `T[N]` | `readonly T[]` | `fixedArray(N, codec)` |
+| `T<N>` | `readonly T[]` | `varArray(N, codec)` |
+| `T*` | `T \| undefined` | `option(codec)` |
+| `struct` | `readonly interface` | `xdrStruct([...])` |
+| `enum` | String literal union | `xdrEnum({...})` |
+| `union switch` | Tagged object | `taggedUnion({...})` |
+
+## API
+
+### Codec Interface
+
+Every codec implements `XdrCodec<T>`:
+
+```typescript
+interface XdrCodec<T> {
+  // Low-level: read/write within a stream
+  encode(writer: XdrWriter, value: T): void;
+  decode(reader: XdrReader): T;
+
+  // High-level: standalone encode/decode
+  toXdr(value: T, limits?: Limits): Uint8Array;
+  fromXdr(input: Uint8Array | ArrayBufferLike, limits?: Limits): T;
+  toBase64(value: T, limits?: Limits): string;
+  fromBase64(input: string, limits?: Limits): T;
+}
+```
+
+### Primitives
+
+```typescript
+import { int32, uint32, int64, uint64, float32, float64, bool, xdrVoid } from 'ts-xdr';
+
+int32.toXdr(-42);          // Uint8Array
+uint64.toXdr(100n);        // bigint for 64-bit types
+bool.toXdr(true);
+```
+
+### Containers
+
+```typescript
+import { fixedOpaque, varOpaque, xdrString, fixedArray, varArray, option } from 'ts-xdr';
+
+// Fixed-length opaque data (padded to 4-byte boundary)
+const hash = fixedOpaque(32);
+
+// Variable-length opaque with max size
+const payload = varOpaque(1024);
+
+// UTF-8 string with max length
+const name = xdrString(100);
+
+// Fixed-length array of 3 int32s
+const triple = fixedArray(3, int32);
+
+// Variable-length array with max 10 elements
+const list = varArray(10, int32);
+
+// Optional value
+const maybeInt = option(int32);
+maybeInt.toXdr(42);        // present
+maybeInt.toXdr(undefined); // absent
+```
+
+### Structs
+
+```typescript
+import { xdrStruct, int32, xdrString } from 'ts-xdr';
+
+interface Person {
+  readonly name: string;
+  readonly age: number;
+}
+
+const Person = xdrStruct<Person>([
+  ['name', xdrString(100)],
+  ['age', int32],
+]);
+
+const bytes = Person.toXdr({ name: 'Alice', age: 30 });
+```
+
+### Enums
+
+Enums use string literals for type safety and expose integer values as properties:
+
+```typescript
+import { xdrEnum } from 'ts-xdr';
+
+type AssetType = 'Native' | 'CreditAlphanum4' | 'CreditAlphanum12';
+
+const AssetType = xdrEnum({
+  Native: 0,
+  CreditAlphanum4: 1,
+  CreditAlphanum12: 2,
+});
+
+AssetType.Native;             // 0
+AssetType.toXdr('Native');    // encodes as int32
+AssetType.fromXdr(bytes);     // 'Native' | 'CreditAlphanum4' | 'CreditAlphanum12'
+```
+
+### Tagged Unions
+
+Unions are represented as discriminated tagged objects:
+
+```typescript
+import { taggedUnion, xdrStruct, xdrEnum, fixedOpaque, xdrString } from 'ts-xdr';
+
+// Assuming AlphaNum4 and AlphaNum12 structs are defined...
+
+type Asset =
+  | { readonly tag: 'Native' }
+  | { readonly tag: 'CreditAlphanum4'; readonly value: AlphaNum4 }
+  | { readonly tag: 'CreditAlphanum12'; readonly value: AlphaNum12 };
+
+const Asset = taggedUnion({
+  switchOn: AssetType,
+  arms: [
+    { tags: ['Native'] },
+    { tags: ['CreditAlphanum4'], codec: AlphaNum4 },
+    { tags: ['CreditAlphanum12'], codec: AlphaNum12 },
+  ],
+}) as XdrCodec<Asset>;
+
+// Encode
+Asset.toXdr({ tag: 'Native' });
+Asset.toXdr({ tag: 'CreditAlphanum4', value: { assetCode, issuer } });
+
+// Decode and pattern match
+const asset = Asset.fromXdr(bytes);
+switch (asset.tag) {
+  case 'Native':
+    break;
+  case 'CreditAlphanum4':
+    console.log(asset.value.assetCode);
+    break;
+}
+```
+
+### Lazy (Circular Dependencies)
+
+Use `lazy()` to break circular type references in generated code:
+
+```typescript
+import { lazy } from 'ts-xdr';
+
+const Tree: XdrCodec<Tree> = xdrStruct<Tree>([
+  ['value', int32],
+  ['children', varArray(10, lazy(() => Tree))],
+]);
+```
+
+### Reader & Writer
+
+For advanced use, work directly with the binary stream:
+
+```typescript
+import { XdrReader, XdrWriter } from 'ts-xdr';
+
+// Write
+const writer = new XdrWriter();
+writer.writeInt32(42);
+writer.writeString('hello');
+const bytes = writer.toUint8Array();
+
+// Read
+const reader = new XdrReader(bytes);
+reader.readInt32();  // 42
+reader.readString(); // 'hello'
+reader.ensureEnd();  // throws if bytes remain
+```
+
+### Limits
+
+Control resource consumption with depth and byte limits:
+
+```typescript
+import { DEFAULT_LIMITS } from 'ts-xdr';
+
+// Default: { depth: 512, len: 256 * 1024 * 1024 }
+
+// Custom limits
+const decoded = SomeType.fromXdr(bytes, { depth: 100, len: 1024 });
+```
+
+### Error Handling
+
+All errors throw `XdrError` with a typed error code:
+
+```typescript
+import { XdrError, XdrErrorCode } from 'ts-xdr';
+
+try {
+  SomeType.fromXdr(malformedBytes);
+} catch (err) {
+  if (err instanceof XdrError) {
+    switch (err.code) {
+      case XdrErrorCode.BufferUnderflow:
+      case XdrErrorCode.InvalidValue:
+      case XdrErrorCode.InvalidEnumValue:
+      case XdrErrorCode.InvalidUnionDiscriminant:
+      case XdrErrorCode.NonZeroPadding:
+      case XdrErrorCode.BufferNotFullyConsumed:
+      case XdrErrorCode.DepthLimitExceeded:
+      case XdrErrorCode.ByteLimitExceeded:
+      // ...
+    }
+  }
+}
+```
+
+## Code Generation
+
+Types are generated from XDR schema files (`.x`) using a TypeScript backend for [`stellar/xdrgen`](https://github.com/stellar/xdrgen). The generator produces a single `.ts` file containing type definitions and codec instances for all types in the schema.
+
+Generated code uses TypeScript's type-value duality pattern:
+
+```typescript
+// Type alias and codec constant share the same name
+export type Uint32 = number;
+export const Uint32: XdrCodec<Uint32> = uint32;
+
+// Struct interface and codec constant share the same name
+export interface SomeStruct { readonly field: number; }
+export const SomeStruct: XdrCodec<SomeStruct> = xdrStruct([['field', int32]]);
+```
+
+## Project Structure
+
+```
+ts-xdr/
+├── src/                    # Runtime library
+│   ├── index.ts            # Public API
+│   ├── reader.ts           # XdrReader (deserialization)
+│   ├── writer.ts           # XdrWriter (serialization)
+│   ├── codec.ts            # XdrCodec interface & BaseCodec
+│   ├── primitives.ts       # int32, uint32, int64, uint64, float, bool, void
+│   ├── containers.ts       # opaque, string, arrays, option
+│   ├── composites.ts       # struct, enum, union, lazy
+│   ├── errors.ts           # XdrError and error codes
+│   ├── limits.ts           # Depth/byte limit tracking
+│   └── base64.ts           # Cross-platform Base64
+├── tests/                  # Test suite (Vitest)
+│   ├── reader.test.ts
+│   ├── writer.test.ts
+│   ├── primitives.test.ts
+│   ├── containers.test.ts
+│   ├── composites.test.ts
+│   ├── integration.test.ts
+│   └── rs-compat/          # Cross-implementation tests against rs-stellar-xdr
+├── generated/              # Generated Stellar XDR types
+├── generator/              # xdrgen TypeScript backend (Ruby)
+├── vendor/                 # Vendored xdrgen + Stellar XDR schemas
+├── package.json
+├── tsconfig.json
+└── vitest.config.ts
+```
+
+## Development
+
+```bash
+# Install dependencies
+npm install
+
+# Build
+npm run build
+
+# Run tests
+npm run test
+```
+
+## Design Principles
+
+1. **Type safety first** — leverage TypeScript's type system for compile-time correctness. Discriminated unions, string-literal enums, and readonly interfaces.
+2. **Zero runtime dependencies** — the library has no production dependencies.
+3. **Codec composability** — small, composable codec building blocks that combine to represent any XDR schema.
+4. **Correctness** — strict validation of values, padding, and limits. Cross-verified against the Rust `rs-stellar-xdr` implementation.
+5. **Simplicity** — minimal API surface. One way to do things.
+
+## License
+
+Licensed under the Apache License, Version 2.0. See [LICENSE](./LICENSE) for details.

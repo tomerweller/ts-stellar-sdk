@@ -1,0 +1,46 @@
+grammar XdrEnumGrammar
+
+  rule enum_def
+    "enum" space 
+    identifier space? 
+    enum_body space? 
+    ";"
+    <Xdrgen::AST::Definitions::Enum>
+  end
+
+
+  rule enum_body
+    "{" 
+    space? 
+    first_member_n:enum_member
+    additional_members_n:(space? "," space? enum_member )*
+    space?
+    "}"
+  end
+
+  rule enum_type_spec
+    "enum" space enum_body
+    <Xdrgen::AST::Definitions::NestedEnum>
+  end
+
+  rule enum_member
+    identifier 
+    space? 
+    value_n:enum_value?
+    <Xdrgen::AST::Definitions::EnumMember>
+  end
+
+  rule enum_value
+    "=" 
+    space? 
+    val:(enum_value_constant / enum_value_alias)
+  end
+
+  rule enum_value_constant
+    constant
+  end
+
+  rule enum_value_alias
+    identifier
+  end
+end

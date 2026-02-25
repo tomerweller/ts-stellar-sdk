@@ -1,0 +1,71 @@
+grammar XdrBaseGrammar
+
+  rule identifier
+    !keyword
+    ([a-zA-Z] [0-9a-zA-Z_]*)
+    ("::" [a-zA-Z] [0-9a-zA-Z_]*)*
+    <Xdrgen::AST::Identifier>
+  end
+
+  rule keyword
+    ("bool" /
+    "case" /
+    "const" /
+    "default" /
+    "double" /
+    "quadruple" /
+    "enum" /
+    "float" /
+    "hyper" /
+    "opaque" /
+    "string" /
+    "struct" /
+    "switch" /
+    "typedef" /
+    "union" /
+    "unsigned" /
+    "int" /
+    "void")
+    &space
+   end
+
+  rule value
+    identifier / constant
+  end
+
+  rule constant
+    ( hexadecimal_constant / octal_constant / decimal_constant )
+  end
+
+  rule decimal_constant
+    "0" <Xdrgen::AST::DecimalConstant>
+    /
+    "-"? [1-9] [0-9]* <Xdrgen::AST::DecimalConstant>
+  end
+
+  rule hexadecimal_constant
+    "0x" [a-fA-F0-9]+
+    <Xdrgen::AST::HexadecimalConstant>
+  end
+
+  rule octal_constant
+    "0" [0-7]+
+    <Xdrgen::AST::OctalConstant>
+  end
+
+
+  # Misc.
+
+  rule size
+    identifier / decimal_constant
+  end
+
+  rule space
+    ([\s] / line_comment / block_comment)+
+    <Xdrgen::AST::Whitespace>
+  end
+
+  rule asterisk
+    "*"
+  end
+end

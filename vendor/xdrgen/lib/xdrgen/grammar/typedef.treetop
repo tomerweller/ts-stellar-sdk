@@ -1,0 +1,12 @@
+grammar XdrTypedefGrammar
+
+  rule typedef_def
+    "typedef" 
+    space 
+    declaration 
+    space?
+    ";" 
+    <Xdrgen::AST::Definitions::Typedef>
+  end
+
+end
