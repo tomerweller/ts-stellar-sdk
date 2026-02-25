@@ -14,6 +14,40 @@ Built to replace the aging `@stellar/js-xdr` as the foundation for the next-gene
 - **Code-generated types** — generated from `.x` schema files via `xdrgen`
 - **Safety limits** — depth and byte-count tracking to prevent denial-of-service
 
+## Comparison with `@stellar/js-xdr`
+
+`ts-xdr` is a ground-up replacement for [`@stellar/js-xdr`](https://github.com/stellar/js-xdr). Here's how they differ:
+
+| | `@stellar/js-xdr` | `ts-xdr` |
+|---|---|---|
+| **Language** | JavaScript | TypeScript |
+| **Type safety** | None built-in (requires separate [`dts-xdr`](https://github.com/stellar/dts-xdr) for `.d.ts` generation) | First-class — all types inferred from codec definitions |
+| **Data model** | Class instances with internal `_attributes` object | Plain readonly objects and interfaces |
+| **Structs** | `new Struct({ field: value })`, access via `obj.field()` getter methods | `{ field: value }` plain objects, direct property access |
+| **Enums** | Enum instances with `.name` / `.value` properties, accessed via `EnumType.memberName()` factory methods | String literals (`'Native'`), integer values as static properties (`EnumType.Native === 0`) |
+| **Unions** | `new Union(switch, value)` with `.switch()`, `.arm()`, `.value()` methods | Tagged objects `{ tag, value? }` with TypeScript discriminated union narrowing |
+| **64-bit integers** | Custom `Hyper` / `UnsignedHyper` wrapper classes | Native `bigint` |
+| **Validation** | `instanceof` / constructor name checks | Structural typing — any object with the right shape works |
+| **Dependencies** | Runtime dependencies | Zero runtime dependencies |
+| **Module format** | CommonJS + ESM | ESM only |
+| **Limits** | Depth tracking only | Depth + byte-count tracking |
+
+### Example: reading an Asset
+
+**`@stellar/js-xdr`:**
+```javascript
+const asset = Asset.fromXDR(bytes);
+asset.switch().name;             // 'assetTypeCreditAlphanum4'
+asset.alphaNum4().assetCode();   // Buffer
+```
+
+**`ts-xdr`:**
+```typescript
+const asset = Asset.fromXdr(bytes);
+asset.tag;                       // 'CreditAlphanum4' (narrowed string literal)
+asset.value.assetCode;           // Uint8Array (direct property access)
+```
+
 ## Installation
 
 ```bash
