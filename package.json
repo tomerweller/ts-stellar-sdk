@@ -4,7 +4,7 @@
   "type": "module",
   "workspaces": ["packages/*"],
   "scripts": {
-    "build": "npm run build -w packages/strkey && npm run build -w packages/xdr && npm run build -w packages/tx-builder && npm run build -w packages/rpc-client",
+    "build": "npm run build -w packages/strkey && npm run build -w packages/xdr && npm run build -w packages/tx-builder && npm run build -w packages/rpc-client && npm run build -w packages/friendbot-client",
     "test": "vitest run"
   },
   "devDependencies": {

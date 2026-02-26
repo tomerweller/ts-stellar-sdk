@@ -10,6 +10,7 @@ Modern TypeScript replacement for Stellar's official JS library stack. Zero runt
 | [`@stellar/xdr`](./packages/xdr/) | XDR codec library with auto-generated Stellar types | `@stellar/strkey` | done |
 | [`@stellar/tx-builder`](./packages/tx-builder/) | Transaction building, signing, keypairs | `@stellar/xdr` | done |
 | [`@stellar/rpc-client`](./packages/rpc-client/) | JSON-RPC client for Soroban RPC | `@stellar/xdr` | done |
+| [`@stellar/friendbot-client`](./packages/friendbot-client/) | Friendbot faucet client | none | done |
 
 ## Key Differences vs Official Stellar JS SDK
 
@@ -29,7 +30,7 @@ Modern TypeScript replacement for Stellar's official JS library stack. Zero runt
 
 ```bash
 npm install        # install deps + workspace symlinks
-npm run build      # build all packages (strkey → xdr → tx-builder → rpc-client)
+npm run build      # build all packages (strkey → xdr → tx-builder → rpc-client → friendbot-client)
 npm test           # run all 614 tests
 ```
 
@@ -59,7 +60,8 @@ packages/
   strkey/       # standalone address encoding, zero deps
   xdr/          # XDR codecs, generated Stellar types, code generator
   tx-builder/   # transactions, operations, keypairs, signing
-  rpc-client/   # Soroban RPC JSON-RPC client
+  rpc-client/       # Soroban RPC JSON-RPC client
+  friendbot-client/ # Friendbot faucet client
 ```
 
 See each package's README for detailed API documentation.

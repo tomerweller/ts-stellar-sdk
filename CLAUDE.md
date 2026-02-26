@@ -6,6 +6,7 @@ TypeScript replacement for Stellar's official JS library stack. Zero runtime dep
 
 - **`@stellar/strkey`** — Standalone Stellar address encoding (Base32 + CRC16-XModem). Zero dependencies.
 - **`@stellar/xdr`** — XDR codec library with Stellar-specific wrappers and auto-generated types. Depends on `@stellar/strkey`.
+- **`@stellar/friendbot-client`** — Lightweight Friendbot faucet client. Zero dependencies.
 
 ## Reference Libraries
 
@@ -36,11 +37,12 @@ This project replaces Stellar's official JS stack. Use these as API/behavior ref
 ### Planned Package Roadmap
 
 ```
-@stellar/strkey         ← done (standalone address encoding)
-@stellar/xdr            ← done (XDR codecs + generated Stellar types)
-@stellar/tx-builder     ← future (replaces stellar-base: Transaction, Operation, Keypair)
-@stellar/horizon-client ← future (replaces stellar-sdk Horizon.Server)
-@stellar/rpc-client     ← future (replaces stellar-sdk RPC.Server for Soroban)
+@stellar/strkey           ← done (standalone address encoding)
+@stellar/xdr              ← done (XDR codecs + generated Stellar types)
+@stellar/tx-builder       ← done (replaces stellar-base: Transaction, Operation, Keypair)
+@stellar/rpc-client       ← done (replaces stellar-sdk RPC.Server for Soroban)
+@stellar/friendbot-client ← done (Friendbot faucet client)
+@stellar/horizon-client   ← future (replaces stellar-sdk Horizon.Server)
 ```
 
 ## Commands
