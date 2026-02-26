@@ -112,6 +112,37 @@ export function is<K extends string>(
   return typeof union === 'object' && union !== null && key in union;
 }
 
+// ---- jsonAs ----
+
+/**
+ * Wraps a codec, delegating binary encode/decode to the inner codec but
+ * overriding toJsonValue/fromJsonValue with custom functions. This is the
+ * mechanism used by the code generator to apply domain-specific JSON
+ * representations (e.g. strkey addresses, ASCII asset codes).
+ */
+export function jsonAs<T>(
+  codec: XdrCodec<T>,
+  overrides: {
+    toJsonValue: (value: T) => unknown;
+    fromJsonValue: (json: unknown) => T;
+  },
+): XdrCodec<T> {
+  return new (class extends BaseCodec<T> {
+    encode(writer: XdrWriter, value: T): void {
+      codec.encode(writer, value);
+    }
+    decode(reader: XdrReader): T {
+      return codec.decode(reader);
+    }
+    toJsonValue(value: T): unknown {
+      return overrides.toJsonValue(value);
+    }
+    fromJsonValue(json: unknown): T {
+      return overrides.fromJsonValue(json);
+    }
+  })();
+}
+
 // ---- taggedUnion ----
 
 interface UnionArm {

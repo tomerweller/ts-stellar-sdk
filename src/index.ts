@@ -23,4 +23,24 @@ export {
   varArray,
   option,
 } from './containers.js';
-export { xdrStruct, xdrEnum, lazy, taggedUnion, is } from './composites.js';
+export { xdrStruct, xdrEnum, lazy, taggedUnion, is, jsonAs } from './composites.js';
+export {
+  encodeBase32,
+  decodeBase32,
+  crc16xmodem,
+  encodeStrkey,
+  decodeStrkey,
+  STRKEY_ED25519_PUBLIC,
+  STRKEY_MUXED_ED25519,
+  STRKEY_PRE_AUTH_TX,
+  STRKEY_HASH_X,
+  STRKEY_CONTRACT,
+  STRKEY_SIGNED_PAYLOAD,
+} from './strkey.js';
+export {
+  stellarPublicKey,
+  stellarAccountId,
+  stellarMuxedAccount,
+  stellarAssetCode4,
+  stellarAssetCode12,
+} from './stellar.js';

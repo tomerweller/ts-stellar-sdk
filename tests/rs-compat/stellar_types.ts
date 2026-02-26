@@ -23,6 +23,11 @@ import {
   xdrEnum,
   taggedUnion,
   type XdrCodec,
+  stellarPublicKey,
+  stellarAccountId,
+  stellarMuxedAccount,
+  stellarAssetCode4,
+  stellarAssetCode12,
 } from '../../src/index.js';
 
 // ============================================================
@@ -42,10 +47,10 @@ export type Signature = Uint8Array;
 export const Signature: XdrCodec<Signature> = varOpaque(64);
 
 export type AssetCode4 = Uint8Array;
-export const AssetCode4: XdrCodec<AssetCode4> = fixedOpaque(4);
+export const AssetCode4: XdrCodec<AssetCode4> = stellarAssetCode4(fixedOpaque(4));
 
 export type AssetCode12 = Uint8Array;
-export const AssetCode12: XdrCodec<AssetCode12> = fixedOpaque(12);
+export const AssetCode12: XdrCodec<AssetCode12> = stellarAssetCode12(fixedOpaque(12));
 
 export type SequenceNumber = bigint;
 export const SequenceNumber: XdrCodec<SequenceNumber> = int64;
@@ -66,13 +71,16 @@ export const PublicKeyType = xdrEnum({
 });
 
 export type PublicKey = { readonly ed25519: Uint8Array };
-export const PublicKey: XdrCodec<PublicKey> = taggedUnion({
+export const PublicKey: XdrCodec<PublicKey> = stellarPublicKey(taggedUnion({
   switchOn: PublicKeyType,
   arms: [{ tags: ['ed25519'], codec: Uint256 }],
-}) as XdrCodec<PublicKey>;
+}) as XdrCodec<PublicKey>);
 
 export type AccountId = PublicKey;
-export const AccountId: XdrCodec<AccountId> = PublicKey;
+export const AccountId: XdrCodec<AccountId> = stellarAccountId(taggedUnion({
+  switchOn: PublicKeyType,
+  arms: [{ tags: ['ed25519'], codec: Uint256 }],
+}) as XdrCodec<AccountId>);
 
 // ============================================================
 // CryptoKeyType / MuxedAccount
@@ -105,13 +113,13 @@ export const MuxedAccountMed25519: XdrCodec<MuxedAccountMed25519> =
 export type MuxedAccount =
   | { readonly ed25519: Uint8Array }
   | { readonly muxed_ed25519: MuxedAccountMed25519 };
-export const MuxedAccount: XdrCodec<MuxedAccount> = taggedUnion({
+export const MuxedAccount: XdrCodec<MuxedAccount> = stellarMuxedAccount(taggedUnion({
   switchOn: CryptoKeyType,
   arms: [
     { tags: ['ed25519'], codec: Uint256 },
     { tags: ['muxed_ed25519'], codec: MuxedAccountMed25519 },
   ],
-}) as XdrCodec<MuxedAccount>;
+}) as XdrCodec<MuxedAccount>);
 
 // ============================================================
 // TimeBounds / Preconditions
