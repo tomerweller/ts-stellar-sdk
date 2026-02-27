@@ -23,3 +23,4 @@ export {
   type CollectionPage,
 } from './api.js';
 export type * from './api.js';
+export { AccountRequiresMemoError } from '@stellar/seps';

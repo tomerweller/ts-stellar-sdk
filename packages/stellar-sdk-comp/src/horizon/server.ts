@@ -12,6 +12,11 @@ import {
   TransactionEnvelope as TransactionEnvelopeCodec,
 } from '@stellar/xdr';
 import type { Asset } from '@stellar/stellar-base-comp';
+import { Transaction, FeeBumpTransaction } from '@stellar/stellar-base-comp';
+import {
+  checkMemoRequired,
+  AccountRequiresMemoError,
+} from '@stellar/seps';
 import { AccountResponse } from './api.js';
 import type {
   RootResponse,
@@ -179,6 +184,31 @@ export class Server {
   async submitAsyncTransaction(tx: any): Promise<SubmitAsyncTransactionResponse> {
     const envelope = this._extractEnvelope(tx);
     return this._client.submitAsyncTransaction(envelope);
+  }
+
+  async checkMemoRequired(
+    transaction: Transaction | FeeBumpTransaction,
+  ): Promise<void> {
+    const inner =
+      transaction instanceof FeeBumpTransaction
+        ? transaction.innerTransaction
+        : transaction;
+    const memoType = inner.memo.type;
+    const operations = inner.operations.map((op: any) => ({
+      type: op.type ?? '',
+      destination: 'destination' in op ? (op.destination as string) : undefined,
+    }));
+    const loadAccountData = async (
+      accountId: string,
+    ): Promise<Record<string, string> | null> => {
+      try {
+        const account = await this._client.getAccount(accountId);
+        return (account.data ?? {}) as Record<string, string>;
+      } catch {
+        return null;
+      }
+    };
+    await checkMemoRequired(memoType, operations, loadAccountData);
   }
 
   private _extractEnvelope(tx: any): TransactionEnvelope {

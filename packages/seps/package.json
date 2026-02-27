@@ -1,5 +1,5 @@
 {
-  "name": "@stellar/stellar-sdk-comp",
+  "name": "@stellar/seps",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -14,10 +14,7 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@stellar/stellar-base-comp": "*",
-    "@stellar/rpc-client": "*",
-    "@stellar/horizon-client": "*",
-    "@stellar/seps": "*"
+    "smol-toml": "^1.3.0"
   },
   "engines": {
     "node": ">=18"

@@ -5,7 +5,7 @@
   "type": "module",
   "workspaces": ["packages/*"],
   "scripts": {
-    "build": "npm run build -w packages/strkey && npm run build -w packages/xdr && npm run build -w packages/tx-builder && npm run build -w packages/rpc-client && npm run build -w packages/friendbot-client && npm run build -w packages/horizon-client && npm run build -w packages/stellar-base-comp && npm run build -w packages/stellar-sdk-comp && npm run build -w packages/integration-tests",
+    "build": "npm run build -w packages/strkey && npm run build -w packages/xdr && npm run build -w packages/tx-builder && npm run build -w packages/rpc-client && npm run build -w packages/friendbot-client && npm run build -w packages/horizon-client && npm run build -w packages/seps && npm run build -w packages/stellar-base-comp && npm run build -w packages/stellar-sdk-comp && npm run build -w packages/integration-tests",
     "test": "vitest run"
   },
   "devDependencies": {

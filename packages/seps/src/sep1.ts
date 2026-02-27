@@ -1,0 +1,37 @@
+import { parse } from 'smol-toml';
+import { httpGetText, type TransportOptions } from './transport.js';
+import { StellarTomlError } from './errors.js';
+
+export interface StellarTomlResolveOptions {
+  allowHttp?: boolean;
+  timeout?: number;
+}
+
+export async function resolveStellarToml(
+  domain: string,
+  opts?: StellarTomlResolveOptions,
+): Promise<Record<string, unknown>> {
+  const protocol = opts?.allowHttp ? 'http' : 'https';
+  const url = `${protocol}://${domain}/.well-known/stellar.toml`;
+
+  let text: string;
+  try {
+    const transportOpts: TransportOptions = {
+      allowHttp: opts?.allowHttp,
+      timeout: opts?.timeout,
+    };
+    text = await httpGetText(url, transportOpts);
+  } catch (err) {
+    throw new StellarTomlError(
+      `Failed to fetch stellar.toml from ${domain}: ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
+
+  try {
+    return parse(text) as Record<string, unknown>;
+  } catch (err) {
+    throw new StellarTomlError(
+      `Failed to parse stellar.toml from ${domain}: ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
+}
