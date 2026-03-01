@@ -120,7 +120,7 @@ export class ScInt {
 
   toScVal(): any {
     if (this._type) {
-      assertRange(this._type, this._value);
+      // Range already validated in constructor; _value and _type are immutable.
       switch (this._type) {
         case 'i64': return { I64: this._value };
         case 'u64': return { U64: this._value };

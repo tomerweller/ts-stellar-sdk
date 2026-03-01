@@ -26,9 +26,8 @@ export class BuiltTransaction {
   }
 
   async sign(...keypairs: Keypair[]): Promise<this> {
-    for (const kp of keypairs) {
-      this.signatures.push(await kp.signDecorated(this.hash));
-    }
+    const sigs = await Promise.all(keypairs.map((kp) => kp.signDecorated(this.hash)));
+    this.signatures.push(...sigs);
     return this;
   }
 
@@ -89,9 +88,8 @@ export class BuiltFeeBumpTransaction {
   }
 
   async sign(...keypairs: Keypair[]): Promise<this> {
-    for (const kp of keypairs) {
-      this.signatures.push(await kp.signDecorated(this.hash));
-    }
+    const sigs = await Promise.all(keypairs.map((kp) => kp.signDecorated(this.hash)));
+    this.signatures.push(...sigs);
     return this;
   }
 

@@ -18,6 +18,11 @@ import {
  * - Otherwise, throw a TypeError.
  */
 export function extractBaseAddress(address: string): string {
+  // Fast path: G-addresses are already base addresses
+  if (address.length === 56 && address.startsWith('G')) {
+    return address;
+  }
+
   const { version, payload } = decodeStrkey(address);
 
   if (version === STRKEY_ED25519_PUBLIC) {

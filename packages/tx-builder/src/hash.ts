@@ -13,8 +13,14 @@ export async function sha256(data: Uint8Array): Promise<Uint8Array> {
   return new Uint8Array(digest);
 }
 
+const networkIdCache = new Map<string, Uint8Array>();
+
 export async function networkId(passphrase: string): Promise<Uint8Array> {
-  return sha256(encoder.encode(passphrase));
+  let cached = networkIdCache.get(passphrase);
+  if (cached) return cached;
+  cached = await sha256(encoder.encode(passphrase));
+  networkIdCache.set(passphrase, cached);
+  return cached;
 }
 
 // EnvelopeType.Tx = 2, as 4-byte big-endian

@@ -1,7 +1,14 @@
+const HEX_TABLE: string[] = new Array(256);
+for (let i = 0; i < 256; i++) {
+  HEX_TABLE[i] = i.toString(16).padStart(2, '0');
+}
+
 export function bytesToHex(bytes: Uint8Array): string {
-  return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
+  let result = '';
+  for (let i = 0; i < bytes.length; i++) {
+    result += HEX_TABLE[bytes[i]!]!;
+  }
+  return result;
 }
 
 export function hexToBytes(hex: string): Uint8Array {

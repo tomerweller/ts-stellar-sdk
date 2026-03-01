@@ -1,8 +1,6 @@
 import { XdrError, XdrErrorCode } from './errors.js';
 import { type Limits, DEFAULT_LIMITS, LimitTracker } from './limits.js';
 
-const textEncoder = new TextEncoder();
-
 const INT32_MIN = -(2 ** 31);
 const INT32_MAX = 2 ** 31 - 1;
 const UINT32_MAX = 2 ** 32 - 1;

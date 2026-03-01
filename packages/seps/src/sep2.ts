@@ -9,10 +9,7 @@ export interface FederationRecord {
   memo?: string;
 }
 
-export interface FederationResolveOptions {
-  allowHttp?: boolean;
-  timeout?: number;
-}
+export type FederationResolveOptions = TransportOptions;
 
 export async function queryFederationServer(
   federationUrl: string,
@@ -23,14 +20,9 @@ export async function queryFederationServer(
   url.searchParams.set('type', params.type);
   url.searchParams.set('q', params.q);
 
-  const transportOpts: TransportOptions = {
-    allowHttp: opts?.allowHttp,
-    timeout: opts?.timeout,
-  };
-
   let result: unknown;
   try {
-    result = await httpGetJson<unknown>(url.toString(), transportOpts);
+    result = await httpGetJson<unknown>(url.toString(), opts);
   } catch (err) {
     throw new FederationError(
       `Federation request failed: ${err instanceof Error ? err.message : String(err)}`,

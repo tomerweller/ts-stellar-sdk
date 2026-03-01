@@ -14,6 +14,8 @@ import type {
 } from '@stellar/xdr';
 import { parsePublicKey, parseMuxedAccount } from './helpers.js';
 
+const encoder = new TextEncoder();
+
 interface OperationOptions {
   source?: string;
 }
@@ -241,7 +243,7 @@ export interface AllowTrustOptions extends OperationOptions {
 }
 
 export function allowTrust(opts: AllowTrustOptions): Operation {
-  const codeBytes = new TextEncoder().encode(opts.assetCode);
+  const codeBytes = encoder.encode(opts.assetCode);
   let asset: { readonly CreditAlphanum4: Uint8Array } | { readonly CreditAlphanum12: Uint8Array };
   if (codeBytes.length <= 4) {
     const padded = new Uint8Array(4);

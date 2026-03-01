@@ -2,6 +2,17 @@
 const _Buffer: typeof globalThis.Buffer | undefined =
   typeof globalThis !== 'undefined' ? (globalThis as any).Buffer : undefined;
 
+const CHUNK_SIZE = 8192;
+
+function bytesToBinary(data: Uint8Array): string {
+  let result = '';
+  for (let i = 0; i < data.length; i += CHUNK_SIZE) {
+    const chunk = data.subarray(i, Math.min(i + CHUNK_SIZE, data.length));
+    result += String.fromCharCode(...chunk);
+  }
+  return result;
+}
+
 export function encodeBase64(data: Uint8Array): string {
   // Node.js path
   if (_Buffer) {
@@ -10,11 +21,7 @@ export function encodeBase64(data: Uint8Array): string {
     );
   }
   // Browser path
-  let binary = '';
-  for (let i = 0; i < data.length; i++) {
-    binary += String.fromCharCode(data[i]!);
-  }
-  return btoa(binary);
+  return btoa(bytesToBinary(data));
 }
 
 export function decodeBase64(input: string): Uint8Array {

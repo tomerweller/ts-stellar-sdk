@@ -26,8 +26,8 @@ function wrapAsset(asset: AssetLike): AssetLike {
 }
 
 export class LiquidityPoolAsset {
-  readonly assetA: any;
-  readonly assetB: any;
+  readonly assetA: AssetLike;
+  readonly assetB: AssetLike;
   readonly fee: number;
 
   constructor(assetA: AssetLike, assetB: AssetLike, fee: number = 30) {
@@ -44,8 +44,8 @@ export class LiquidityPoolAsset {
   }
 
   getLiquidityPoolParameters(): {
-    assetA: any;
-    assetB: any;
+    assetA: AssetLike;
+    assetB: AssetLike;
     fee: number;
   } {
     return {

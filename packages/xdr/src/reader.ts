@@ -4,12 +4,12 @@ import { type Limits, DEFAULT_LIMITS, LimitTracker } from './limits.js';
 // Use a latin1-style decoder that preserves all byte values for round-trip fidelity.
 // Stellar XDR strings may contain non-UTF-8 bytes (e.g., in memo text fields).
 // Using UTF-8 decoding would replace invalid bytes with U+FFFD, breaking hashes.
+const CHUNK_SIZE = 8192;
 function decodeLatin1(bytes: Uint8Array): string {
-  // Build string one character at a time from byte values.
-  // This preserves all byte values 0x00-0xFF as their corresponding code points.
   let result = '';
-  for (let i = 0; i < bytes.length; i++) {
-    result += String.fromCharCode(bytes[i]!);
+  for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
+    const chunk = bytes.subarray(i, Math.min(i + CHUNK_SIZE, bytes.length));
+    result += String.fromCharCode(...chunk);
   }
   return result;
 }
